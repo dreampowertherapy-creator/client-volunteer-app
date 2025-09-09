@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Power Therapy - Community Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        .bg-gradient-blue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hover-float:hover {
+            transform: translateY(-2px);
+        }
+        .notification-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(5px);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover {
+            background-color: #e0e7ff;
+        }
+        .calendar-day.available {
+            background-color: #dbeafe;
+            border: 2px solid #3b82f6;
+        }
+        .calendar-day.booked {
+            background-color: #fef3c7;
+            border: 2px solid #f59e0b;
+        }
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+        .message.sent {
+            background-color: #3b82f6;
+            color: white;
+            margin-left: auto;
+        }
+        .message.received {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen bg-gradient-blue flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <div class="bg-gradient-blue text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl font-bold">🐴</span>
+                </div>
+                <h1 class="text-2xl font-bold text-gradient">Dream Power Therapy</h1>
+                <p class="text-gray-600">Healing Through Equine Connection</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="loginEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="loginPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="rememberMe" class="mr-2">
+                    <label for="rememberMe" class="text-sm text-gray-600">Remember me</label>
+                </div>
+                <button onclick="login()" class="w-full bg-gradient-blue text-white py-2 px-4 rounded-md hover:opacity-90 transition duration-200">
+                    Sign In
+                </button>
+                <div class="text-center">
+                    <button onclick="showRegister()" class="text-blue-600 hover:text-blue-800 text-sm">
+                        New here? Register for an account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <div class="bg-gradient-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-sm">🐴</span>
+                        </div>
+                        <h1 class="text-xl font-bold text-gradient">Dream Power Therapy</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="notificationBtn" class="relative p-2 text-gray-600 hover:text-gray-900">
+                            <i data-lucide="bell" class="w-6 h-6"></i>
+                            <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center notification-badge">3</span>
+                        </button>
+                        <button onclick="logout()" class="text-gray-600 hover:text-gray-900">
+                            <i data-lucide="log-out" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex space-x-8 overflow-x-auto">
+                    <button onclick="showTab('dashboard')" class="tab-button active whitespace-nowrap py-4 px-2 border-b-2 border-blue-500 text-blue-600 font-medium">
+                        <i data-lucide="home" class="w-4 h-4 inline mr-2"></i>Dashboard
+                    </button>
+                    <button onclick="showTab('calendar')" class="tab-button whitespace-nowrap py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i data-lucide="calendar" class="w-4 h-4 inline mr-2"></i>Calendar
+                    </button>
+                    <button onclick="showTab('horses')" class="tab-button whitespace-nowrap py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i data-lucide="heart" class="w-4 h-4 inline mr-2"></i>Horses
+                    </button>
+                    <button onclick="showTab('volunteers')" class="tab-button whitespace-nowrap py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>Volunteers
+                    </button>
+                    <button onclick="showTab('community')" class="tab-button whitespace-nowrap py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>Community
+                    </button>
+                    <button onclick="showTab('referrals')" class="tab-button whitespace-nowrap py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i data-lucide="gift" class="w-4 h-4 inline mr-2"></i>Referrals
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6 hover-float transition-transform duration-200">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <i data-lucide="calendar-check" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold">Next Session</h3>
+                                <p class="text-gray-600">Tomorrow at 2:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 hover-float transition-transform duration-200">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <i data-lucide="award" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold">Progress</h3>
+                                <p class="text-gray-600">12 sessions completed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 hover-float transition-transform duration-200">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 p-3 rounded-lg">
+                                <i data-lucide="users" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold">Referral Credits</h3>
+                                <p class="text-gray-600">75% toward next lesson</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Alert -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex">
+                        <i data-lucide="cloud-rain" class="w-5 h-5 text-yellow-600 mt-0.5"></i>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Weather Update</h3>
+                            <p class="text-sm text-yellow-700">Rain expected tomorrow. Your 2:00 PM session may be rescheduled. Rain check credits will be automatically applied.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <button onclick="showTab('calendar')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
+                            <i data-lucide="calendar-plus" class="w-6 h-6 text-blue-600 mb-2"></i>
+                            <p class="font-medium">Book Session</p>
+                            <p class="text-sm text-gray-600">Schedule your next lesson</p>
+                        </button>
+                        <button onclick="showModal('progressForm')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
+                            <i data-lucide="clipboard" class="w-6 h-6 text-green-600 mb-2"></i>
+                            <p class="font-medium">Submit Progress</p>
+                            <p class="text-sm text-gray-600">Share your journey</p>
+                        </button>
+                        <button onclick="showTab('horses')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
+                            <i data-lucide="heart" class="w-6 h-6 text-red-600 mb-2"></i>
+                            <p class="font-medium">Sponsor Horse</p>
+                            <p class="text-sm text-gray-600">Support our therapy horses</p>
+                        </button>
+                        <button onclick="showTab('referrals')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
+                            <i data-lucide="gift" class="w-6 h-6 text-purple-600 mb-2"></i>
+                            <p class="font-medium">Refer Friend</p>
+                            <p class="text-sm text-gray-600">Share the healing journey</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div id="calendar" class="tab-content hidden">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold">Book Your Session</h2>
+                        <div class="flex items-center space-x-4">
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                            </button>
+                            <h3 class="text-lg font-medium">September 2024</h3>
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Legend -->
+                    <div class="flex flex-wrap gap-4 mb-6 text-sm">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-blue-200 border-2 border-blue-500 rounded mr-2"></div>
+                            <span>Available</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-yellow-200 border-2 border-yellow-500 rounded mr-2"></div>
+                            <span>Booked</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-gray-200 rounded mr-2"></div>
+                            <span>Unavailable</span>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="calendar-grid mb-6">
+                        <div class="text-center font-medium text-gray-700 py-2">Sun</div>
+                        <div class="text-center font-medium text-gray-700 py-2">Mon</div>
+                        <div class="text-center font-medium text-gray-700 py-2">Tue</div>
+                        <div class="text-center font-medium text-gray-700 py-2">Wed</div>
+                        <div class="text-center font-medium text-gray-700 py-2">Thu</div>
+                        <div class="text-center font-medium text-gray-700 py-2">Fri</div>
+                        <div class="text-center font-medium text-gray-700 py-2">Sat</div>
+                        
+                        <!-- Calendar Days -->
+                        <div class="calendar-day text-gray-400">1</div>
+                        <div class="calendar-day text-gray-400">2</div>
+                        <div class="calendar-day available" onclick="selectDate(3)">3</div>
+                        <div class="calendar-day available" onclick="selectDate(4)">4</div>
+                        <div class="calendar-day booked">5</div>
+                        <div class="calendar-day available" onclick="selectDate(6)">6</div>
+                        <div class="calendar-day text-gray-400">7</div>
+                        <div class="calendar-day text-gray-400">8</div>
+                        <div class="calendar-day available" onclick="selectDate(9)">9</div>
+                        <div class="calendar-day available" onclick="selectDate(10)">10</div>
+                        <div class="calendar-day available" onclick="selectDate(11)">11</div>
+                        <div class="calendar-day booked">12</div>
+                        <div class="calendar-day available" onclick="selectDate(13)">13</div>
+                        <div class="calendar-day text-gray-400">14</div>
+                        <div class="calendar-day text-gray-400">15</div>
+                        <div class="calendar-day available" onclick="selectDate(16)">16</div>
+                        <div class="calendar-day available" onclick="selectDate(17)">17</div>
+                        <div class="calendar-day available" onclick="selectDate(18)">18</div>
+                        <div class="calendar-day booked">19</div>
+                        <div class="calendar-day available" onclick="selectDate(20)">20</div>
+                        <div class="calendar-day text-gray-400">21</div>
+                        <div class="calendar-day text-gray-400">22</div>
+                        <div class="calendar-day available" onclick="selectDate(23)">23</div>
+                        <div class="calendar-day available" onclick="selectDate(24)">24</div>
+                        <div class="calendar-day available" onclick="selectDate(25)">25</div>
+                        <div class="calendar-day booked">26</div>
+                        <div class="calendar-day available" onclick="selectDate(27)">27</div>
+                        <div class="calendar-day text-gray-400">28</div>
+                        <div class="calendar-day text-gray-400">29</div>
+                        <div class="calendar-day available" onclick="selectDate(30)">30</div>
+                    </div>
+
+                    <!-- Selected Date Info -->
+                    <div id="selectedDateInfo" class="bg-blue-50 rounded-lg p-4 hidden">
+                        <h3 class="font-semibold text-blue-900 mb-2">Selected: <span id="selectedDate"></span></h3>
+                        <p class="text-blue-700 mb-4">Available time slots:</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                            <button onclick="selectTime('9:00 AM')" class="time-slot p-2 border border-blue-300 rounded text-blue-700 hover:bg-blue-100">9:00 AM</button>
+                            <button onclick="selectTime('10:30 AM')" class="time-slot p-2 border border-blue-300 rounded text-blue-700 hover:bg-blue-100">10:30 AM</button>
+                            <button onclick="selectTime('2:00 PM')" class="time-slot p-2 border border-blue-300 rounded text-blue-700 hover:bg-blue-100">2:00 PM</button>
+                            <button onclick="selectTime('3:30 PM')" class="time-slot p-2 border border-blue-300 rounded text-blue-700 hover:bg-blue-100">3:30 PM</button>
+                        </div>
+                        <button onclick="showModal('bookingForm')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Request Booking
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horses Tab -->
+            <div id="horses" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold mb-2">Our Therapy Horses</h2>
+                    <p class="text-gray-600">Meet our amazing therapy horses and consider sponsoring their care.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow overflow-hidden hover-float transition-transform duration-200">
+                        <div class="h-48 bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+                            <span class="text-6xl">🐴</span>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Luna</h3>
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Available</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">A gentle mare specializing in anxiety and PTSD therapy. Luna has helped over 200 clients on their healing journey.</p>
+                            <div class="space-y-2 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span>Monthly feed:</span>
+                                    <span class="font-medium">$150</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Veterinary care:</span>
+                                    <span class="font-medium">$200</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Training & enrichment:</span>
+                                    <span class="font-medium">$100</span>
+                                </div>
+                            </div>
+                            <button onclick="showModal('sponsorForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                Sponsor Luna
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow overflow-hidden hover-float transition-transform duration-200">
+                        <div class="h-48 bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
+                            <span class="text-6xl">🐎</span>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Thunder</h3>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">In Training</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">A powerful gelding being trained for physical therapy sessions. Thunder excels at building confidence and strength.</p>
+                            <div class="space-y-2 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span>Monthly feed:</span>
+                                    <span class="font-medium">$175</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Veterinary care:</span>
+                                    <span class="font-medium">$250</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Training & enrichment:</span>
+                                    <span class="font-medium">$150</span>
+                                </div>
+                            </div>
+                            <button onclick="showModal('sponsorForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                Sponsor Thunder
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow overflow-hidden hover-float transition-transform duration-200">
+                        <div class="h-48 bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
+                            <span class="text-6xl">🦄</span>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Star</h3>
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Available</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">A patient pony perfect for children's therapy. Star's calm demeanor makes her ideal for young clients with autism.</p>
+                            <div class="space-y-2 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span>Monthly feed:</span>
+                                    <span class="font-medium">$120</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Veterinary care:</span>
+                                    <span class="font-medium">$180</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Training & enrichment:</span>
+                                    <span class="font-medium">$80</span>
+                                </div>
+                            </div>
+                            <button onclick="showModal('sponsorForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                Sponsor Star
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volunteers Tab -->
+            <div id="volunteers" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold mb-2">Volunteer Opportunities</h2>
+                    <p class="text-gray-600">Join our community and make a difference in the lives of our clients and horses.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Event Coordinator</h3>
+                                <p class="text-gray-600">Help organize fundraising events and community outreach</p>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Urgent Need</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span>Time commitment:</span>
+                                <span>2-3 hours/week</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Schedule:</span>
+                                <span>Remote + Events</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Background check:</span>
+                                <span>Required</span>
+                            </div>
+                        </div>
+                        <button onclick="showModal('volunteerForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Apply Now
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Administrative Support</h3>
+                                <p class="text-gray-600">Help with office tasks and client communication</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Available</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span>Time commitment:</span>
+                                <span>2-4 hours/week</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Schedule:</span>
+                                <span>Remote work available</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Background check:</span>
+                                <span>Required</span>
+                            </div>
+                        </div>
+                        <button onclick="showModal('volunteerForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Apply Now
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Volunteer Hours Tracking -->
+                <div class="mt-8 bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Your Volunteer Hours</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">24</div>
+                            <div class="text-gray-600">Hours This Month</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">156</div>
+                            <div class="text-gray-600">Total Hours</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">12</div>
+                            <div class="text-gray-600">Horses Helped</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Tab -->
+            <div id="community" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-xl font-semibold mb-4">Community Chat</h2>
+                            <div class="chat-messages bg-gray-50 rounded-lg p-4 mb-4">
+                                <div class="message received">
+                                    <div class="font-medium text-sm text-gray-600">Sarah M.</div>
+                                    <div>Just finished my session with Luna. Feeling so much more centered today! 🐴✨</div>
+                                </div>
+                                <div class="message received">
+                                    <div class="font-medium text-sm text-gray-600">Mike R.</div>
+                                    <div>That's wonderful, Sarah! Luna has such a calming presence. How many sessions have you had with her?</div>
+                                </div>
+                                <div class="message sent">
+                                    <div>This is my 8th session. The progress has been amazing!</div>
+                                </div>
+                                <div class="message received">
+                                    <div class="font-medium text-sm text-gray-600">Emma K.</div>
+                                    <div>I'm scheduled for my first session next week. Any tips for a newcomer? 😊</div>
+                                </div>
+                                <div class="message received">
+                                    <div class="font-medium text-sm text-gray-600">Volunteer Lisa</div>
+                                    <div>Welcome Emma! Just be yourself - the horses are incredibly intuitive. They'll meet you exactly where you are.</div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <input type="text" id="chatMessage" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Community Guidelines</h3>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li>• Be respectful and supportive</li>
+                                <li>• Share your journey, not personal details</li>
+                                <li>• Celebrate others' progress</li>
+                                <li>• No medical advice - consult professionals</li>
+                                <li>• Report inappropriate content</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-2">Featured Story</h3>
+                            <p class="text-blue-800 text-sm mb-3">"Working with Thunder has transformed my confidence. Six months ago, I couldn't imagine trusting anyone or anything. Now I feel ready to take on the world!" - Anonymous Client</p>
+                            <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">Read More Stories →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Upcoming Events</h3>
+                            <div class="space-y-3">
+                                <div class="border-l-4 border-blue-500 pl-3">
+                                    <div class="font-medium">Volunteer Appreciation BBQ</div>
+                                    <div class="text-sm text-gray-600">Sept 15, 2024 at 6:00 PM</div>
+                                </div>
+                                <div class="border-l-4 border-green-500 pl-3">
+                                    <div class="font-medium">Horse Sponsorship Drive</div>
+                                    <div class="text-sm text-gray-600">Sept 20-30, 2024</div>
+                                </div>
+                                <div class="border-l-4 border-purple-500 pl-3">
+                                    <div class="font-medium">Open House Tour</div>
+                                    <div class="text-sm text-gray-600">Oct 5, 2024 at 2:00 PM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referrals Tab -->
+            <div id="referrals" class="tab-content hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-semibold mb-4">Referral Program</h2>
+                    <div class="bg-gradient-blue rounded-lg p-6 text-white mb-6">
+                        <h3 class="text-xl font-semibold mb-2">Share the Healing Journey</h3>
+                        <p class="mb-4">Every successful referral earns you 25% progress toward your next lesson. Help others discover the transformative power of equine therapy!</p>
+                        <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                            <div class="text-sm opacity-90 mb-1">Your Referral Code</div>
+                            <div class="text-2xl font-bold font-mono">DPT2024-USER</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h4 class="font-semibold mb-3">Share Your Code</h4>
+                            <div class="space-y-2">
+                                <button onclick="copyReferralCode()" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 flex items-center justify-center">
+                                    <i data-lucide="copy" class="w-4 h-4 mr-2"></i>
+                                    Copy Code
+                                </button>
+                                <button onclick="shareReferralLink()" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 flex items-center justify-center">
+                                    <i data-lucide="share-2" class="w-4 h-4 mr-2"></i>
+                                    Share Link
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold mb-3">Progress Toward Next Lesson</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span>Current Progress</span>
+                                    <span class="font-medium">75% (3/4 referrals)</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-blue h-3 rounded-full" style="width: 75%"></div>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Just 1 more referral to unlock your next lesson!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold mb-3">Recent Referrals</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium">Emma K.</div>
+                                    <div class="text-sm text-gray-600">Joined 3 days ago</div>
+                                </div>
+                                <div class="text-green-600 font-medium">+25% Credit</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium">James R.</div>
+                                    <div class="text-sm text-gray-600">Joined 1 week ago</div>
+                                </div>
+                                <div class="text-green-600 font-medium">+25% Credit</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium">Lisa M.</div>
+                                    <div class="text-sm text-gray-600">Joined 2 weeks ago</div>
+                                </div>
+                                <div class="text-green-600 font-medium">+25% Credit</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referral Credits Summary -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Your Referral Impact</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">3</div>
+                            <div class="text-gray-600">Friends Referred</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">75%</div>
+                            <div class="text-gray-600">Progress Earned</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">1</div>
+                            <div class="text-gray-600">Lessons Unlocked</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 id="modalTitle" class="text-lg font-semibold">Modal Title</h3>
+                <button onclick="hideModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="p-6">
+                Modal content goes here
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentUser = null;
+        let selectedDate = null;
+        let selectedTime = null;
+
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+        });
+
+        // Authentication
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (email && password) {
+                currentUser = { email, rememberMe };
+                if (rememberMe) {
+                    localStorage.setItem('dreamPowerUser', JSON.stringify(currentUser));
+                }
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                
+                // Re-initialize icons for main app
+                if (typeof lucide !== 'undefined') {
+                    setTimeout(() => lucide.createIcons(), 100);
+                }
+            } else {
+                alert('Please enter both email and password.');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('dreamPowerUser');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        function showRegister() {
+            showModal('registerForm');
+        }
+
+        // Check for remembered user on page load
+        window.addEventListener('load', function() {
+            const rememberedUser = localStorage.getItem('dreamPowerUser');
+            if (rememberedUser) {
+                currentUser = JSON.parse(rememberedUser);
+                document.getElementById('loginEmail').value = currentUser.email;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                button.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active', 'border-blue-500', 'text-blue-600');
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+        }
+
+        // Calendar functions
+        function selectDate(day) {
+            selectedDate = `September ${day}, 2024`;
+            document.getElementById('selectedDate').textContent = selectedDate;
+            document.getElementById('selectedDateInfo').classList.remove('hidden');
+            
+            // Reset selected time
+            selectedTime = null;
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('bg-blue-600', 'text-white');
+            });
+        }
+
+        function selectTime(time) {
+            selectedTime = time;
+            // Reset all time slots
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('bg-blue-600', 'text-white');
+            });
+            // Highlight selected time
+            event.target.classList.add('bg-blue-600', 'text-white');
+        }
+
+        // Modal functions
+        function showModal(type) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            
+            let formHTML = '';
+            
+            switch(type) {
+                case 'registerForm':
+                    title.textContent = 'Register for Dream Power Therapy';
+                    formHTML = `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your full name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                                <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your phone number">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Client</option>
+                                    <option>Volunteer</option>
+                                    <option>Donor</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tell us about yourself</label>
+                                <textarea rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Share your interest in equine therapy..."></textarea>
+                            </div>
+                            <button onclick="submitRegistration()" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                Submit Application
+                            </button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'bookingForm':
+                    title.textContent = 'Request Session Booking';
+                    formHTML = `
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p><strong>Date:</strong> ${selectedDate || 'Please select a date'}</p>
+                                <p><strong>Time:</strong> ${selectedTime || 'Please select a time'}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Session Type</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Individual Therapy</option>
+                                    <option>Group Session</option>
+                                    <option>Assessment Session</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Horse</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>No preference</option>
+                                    <option>Luna</option>
+                                    <option>Thunder</option>
+                                    <option>Star</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Special Notes</label>
+                                <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Any special considerations or goals for this session..."></textarea>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg">
+                                <p class="text-sm text-yellow-800">
+                                    <strong>Payment Agreement:</strong> By submitting this request, I agree to pay the session fee upon confirmation. Cancellations with less than 24-hour notice will incur a fee.
+                                </p>
+                            </div>
+                            <button onclick="submitBooking()" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                Submit Request
+                            </button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'progressForm':
+                    title.textContent = 'Share Your Progress';
+                    formHTML = `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">How are you feeling today? (1-10)</label>
+                                <input type="range" min="1" max="10" value="7" class="w-full" oninput="updateMoodValue(this.value)">
+                                <div class="text-center">
+                                    <span id="moodValue" class="text-lg font-medium">7</span>/10
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Recent Session Reflection</label>
+                                <textarea rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Share your thoughts about your recent session..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Goals for Next Session</label>
+                                <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="What would you like to work on next?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Upload Photos (optional)</label>
+                                <input type="file" multiple accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="handlePhotoUpload(this)">
+                                <div id="photoPreview" class="mt-2"></div>
+                            </div>
+                            <button onclick="submitProgress()" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                                Share Progress
+                            </button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'sponsorForm':
+                    title.textContent = 'Sponsor a Therapy Horse';
+                    formHTML = `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sponsorship Level</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Full Sponsorship ($450/month)</option>
+                                    <option>Feed Sponsor ($150/month)</option>
+                                    <option>Medical Sponsor ($200/month)</option>
+                                    <option>Training Sponsor ($100/month)</option>
+                                    <option>Custom Amount</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sponsor Name (for recognition)</label>
+                                <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your name or organization">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email for Updates</label>
+                                <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="We'll send monthly photo updates">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Special Message (optional)</label>
+                                <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="A message of support for the horse and our clients..."></textarea>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <p class="text-sm text-green-800">
+                                    <strong>Monthly Updates:</strong> You'll receive photos and updates about your sponsored horse's progress and the clients they're helping.
+                                </p>
+                            </div>
+                            <button onclick="submitSponsorship()" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                                Start Sponsorship
+                            </button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'volunteerForm':
+                    title.textContent = 'Volunteer Application';
+                    formHTML = `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Volunteer Position</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Horse Care Assistant</option>
+                                    <option>Session Assistant</option>
+                                    <option>Event Coordinator</option>
+                                    <option>Administrative Support</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2"> Weekday mornings (9 AM - 12 PM)
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2"> Weekday afternoons (1 PM - 5 PM)
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2"> Weekend mornings (9 AM - 12 PM)
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2"> Weekend afternoons (1 PM - 5 PM)
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Experience with Horses</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>No experience</option>
+                                    <option>Some experience (recreational riding)</option>
+                                    <option>Moderate experience (regular riding)</option>
+                                    <option>Extensive experience (professional/therapeutic)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Why do you want to volunteer?</label>
+                                <textarea rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tell us about your motivation to help with equine therapy..."></textarea>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-sm text-blue-800">
+                                    <strong>Background Check Required:</strong> All volunteers must complete a background check before starting. We'll guide you through this process after your application is approved.
+                                </p>
+                            </div>
+                            <button onclick="submitVolunteerApp()" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                                Submit Application
+                            </button>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            content.innerHTML = formHTML;
+            modal.classList.remove('hidden');
+            
+            // Re-initialize lucide icons for new content
+            if (typeof lucide !== 'undefined') {
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // Form submission functions
+        function submitRegistration() {
+            alert('Registration submitted! Our team will review your application and contact you within 2 business days.');
+            hideModal();
+        }
+
+        function submitBooking() {
+            if (!selectedDate || !selectedTime) {
+                alert('Please select both a date and time from the calendar first.');
+                return;
+            }
+            alert(`Booking request submitted for ${selectedDate} at ${selectedTime}. You'll receive confirmation within 24 hours.`);
+            hideModal();
+        }
+
+        function submitProgress() {
+            alert('Progress shared successfully! Thank you for keeping us updated on your journey.');
+            hideModal();
+        }
+
+        function submitSponsorship() {
+            alert('Sponsorship application received! Our team will contact you to finalize the sponsorship details.');
+            hideModal();
+        }
+
+        function submitVolunteerApp() {
+            alert('Volunteer application submitted! We\'ll review your application and contact you about next steps, including the background check process.');
+            hideModal();
+        }
+
+        // Chat functions
+        function sendMessage() {
+            const input = document.getElementById('chatMessage');
+            const message = input.value.trim();
+            
+            if (message) {
+                const messagesContainer = document.querySelector('.chat-messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message sent';
+                messageDiv.innerHTML = `<div>${message}</div>`;
+                messagesContainer.appendChild(messageDiv);
+                
+                input.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // Simulate community response
+                setTimeout(() => {
+                    const responseDiv = document.createElement('div');
+                    responseDiv.className = 'message received';
+                    responseDiv.innerHTML = `
+                        <div class="font-medium text-sm text-gray-600">Community</div>
+                        <div>Thank you for sharing! Your journey inspires us all. 💙</div>
+                    `;
+                    messagesContainer.appendChild(responseDiv);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 1000);
+            }
+        }
+
+        // Referral functions
+        function copyReferralCode() {
+            navigator.clipboard.writeText('DPT2024-USER').then(() => {
+                alert('Referral code copied to clipboard!');
+            });
+        }
+
+        function shareReferralLink() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Dream Power Therapy',
+                    text: 'Discover the healing power of equine therapy with Dream Power Therapy!',
+                    url: 'https://dreampowertherapy.com/refer/DPT2024-USER'
+                });
+            } else {
+                alert('Share this link: https://dreampowertherapy.com/refer/DPT2024-USER');
+            }
+        }
+
+        // Helper functions
+        function updateMoodValue(value) {
+            document.getElementById('moodValue').textContent = value;
+        }
+
+        function handlePhotoUpload(input) {
+            const files = input.files;
+            const preview = document.getElementById('photoPreview');
+            
+            if (files.length > 0) {
+                preview.innerHTML = `
+                    <div class="flex items-center text-green-600">
+                        <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>
+                        <p class="text-sm">${files.length} photo(s) selected</p>
+                    </div>
+                `;
+                if (typeof lucide !== 'undefined') {
+                    setTimeout(() => lucide.createIcons(), 50);
+                }
+            }
+        }
+
+        // Enter key support for chat
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.id === 'chatMessage') {
+                sendMessage();
+            }
+        });
+
+        // Click outside modal to close
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideModal();
+            }
+        });
+    </script>
+</body>
+</html>3 class="text-lg font-semibold">Horse Care Assistant</h3>
+                                <p class="text-gray-600">Help with daily horse care and maintenance</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Available</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span>Time commitment:</span>
+                                <span>4-6 hours/week</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Schedule:</span>
+                                <span>Flexible</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Background check:</span>
+                                <span>Required</span>
+                            </div>
+                        </div>
+                        <button onclick="showModal('volunteerForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Apply Now
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Session Assistant</h3>
+                                <p class="text-gray-600">Support therapists during client sessions</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Available</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span>Time commitment:</span>
+                                <span>3-4 hours/week</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Schedule:</span>
+                                <span>Weekdays 9AM-5PM</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Background check:</span>
+                                <span>Required</span>
+                            </div>
+                        </div>
+                        <button onclick="showModal('volunteerForm')" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Apply Now
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h
